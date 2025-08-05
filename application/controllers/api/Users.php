@@ -27,14 +27,14 @@ class Users extends CI_Controller
     public function index()
     {
         try {
-            $page = (int)$this->input->get('page') ?: 1;
+            $page     = (int)$this->input->get('page') ?: 1;
             $per_page = (int)$this->input->get('per_page') ?: 10;
             $per_page = min($per_page, 20);
 
             $offset = ($page - 1) * $per_page;
 
-            $users = $this->User_model->get_all($per_page, $offset);
-            $total = $this->User_model->counts();
+            $users   = $this->User_model->get_all($per_page, $offset);
+            $total   = $this->User_model->counts();
             $message = !$users ? 'Nenhuma usuário cadastrado' :  'Usuários listados com sucesso';
 
             $this->api_response->paginated(
@@ -46,6 +46,31 @@ class Users extends CI_Controller
             );
         } catch (Exception $e) {
             log_message('error', 'Erro ao listar usuários: ' . $e->getMessage());
+            $this->api_response->error('Erro interno do servidor', 500);
+        }
+    }
+
+    /**
+     * Obter usuário específico (GET /api/users/{id})
+     */
+    public function show($id)
+    {
+        try {
+            if (!is_numeric($id) || $id <= 0) {
+                $this->api_response->error('ID inválido', 400);
+                return;
+            }
+
+            $user = $this->User_model->get_by_id($id);
+
+            if (!$user) {
+                $this->api_response->error('Usuário não encontrado', 404);
+                return;
+            }
+
+            $this->api_response->success($user, 'Usuário encontrado com sucesso');
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao buscar usuário: ' . $e->getMessage());
             $this->api_response->error('Erro interno do servidor', 500);
         }
     }

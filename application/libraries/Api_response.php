@@ -3,27 +3,20 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Api_response
 {
-    private object $CI;
-
-    public function __construct()
-    {
-        $this->CI = &get_instance();
-    }
-
     /**
      * Resposta de sucesso
      * 
-     * @param object|null $data
+     * @param array|null $data
      * @param string $message
      * @param int $status_code 
      * @return void
      */
-    public function success(?object $data = null, string $message = 'Sucesso', int $status_code = 200): void
+    public function success(?array $data = null, string $message = 'Sucesso', int $status_code = 200): void
     {
         $response = [
             'success' => true,
             'message' => $message,
-            'data' => $data
+            'data'    => $data
         ];
 
         $this->respond($response, $status_code);
@@ -64,16 +57,16 @@ class Api_response
         $total_pages = (int) ceil($total / $per_page);
 
         $response = [
-            'success' => true,
-            'message' => $message,
-            'data' => $data,
+            'success'    => true,
+            'message'    => $message,
+            'data'       => $data,
             'pagination' => [
                 'current_page' => $page,
-                'per_page' => $per_page,
-                'total' => $total,
-                'total_pages' => $total_pages,
-                'has_next' => $page < $total_pages,
-                'has_prev' => $page > 1
+                'per_page'     => $per_page,
+                'total'        => $total,
+                'total_pages'  => $total_pages,
+                'has_next'     => $page < $total_pages,
+                'has_prev'     => $page > 1
             ]
         ];
 
