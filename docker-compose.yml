@@ -1,0 +1,74 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: docker/php/Dockerfile
+    container_name: api-ci3-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www:delegated
+    depends_on:
+      - db
+      - redis
+    networks:
+      - api-ci3-net
+  nginx:
+    image: nginx:1.25.1-alpine-slim
+    container_name: api-ci3-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www:delegated
+      - ./docker/nginx:/etc/nginx/conf.d
+    networks:
+      - api-ci3-net
+  redis:
+    build:
+      context: ./
+      dockerfile: docker/redis/Dockerfile
+    container_name: api-ci3-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    networks:
+      - api-ci3-net
+  db:
+    image: mysql:8.0
+    container_name: api-ci3-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE:-api-ci3}
+      - MYSQL_USER=${DB_USERNAME:-api-ci3}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-api-ci3}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-123123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - api-ci3-net
+    command: --default-authentication-plugin=mysql_native_password
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: api-ci3-phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-123123}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - api-ci3-net
+volumes:
+  redis:
+  db:
+networks:
+  api-ci3-net:
+    driver: bridge
