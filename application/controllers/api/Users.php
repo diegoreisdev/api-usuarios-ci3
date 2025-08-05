@@ -35,13 +35,14 @@ class Users extends CI_Controller
 
             $users = $this->User_model->get_all($per_page, $offset);
             $total = $this->User_model->counts();
+            $message = !$users ? 'Nenhuma usuário cadastrado' :  'Usuários listados com sucesso';
 
             $this->api_response->paginated(
                 $users,
                 $total,
                 $page,
                 $per_page,
-                'Usuários listados com sucesso'
+                $message
             );
         } catch (Exception $e) {
             log_message('error', 'Erro ao listar usuários: ' . $e->getMessage());
