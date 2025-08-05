@@ -89,11 +89,9 @@ class Api_response
      */
     private function respond(array $response, int $status_code = 200): void
     {
-        $this->CI->output
-            ->set_status_header($status_code)
-            ->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode($response, JSON_UNESCAPED_UNICODE));
-
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($status_code);
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
