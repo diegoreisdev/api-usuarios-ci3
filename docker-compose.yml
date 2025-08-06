@@ -44,7 +44,7 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE:-api-ci3}
       - MYSQL_USER=${DB_USERNAME:-api-ci3}
       - MYSQL_PASSWORD=${DB_PASSWORD:-api-ci3}
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-123123}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-api-ci3}
     ports:
       - "3306:3306"
     volumes:
