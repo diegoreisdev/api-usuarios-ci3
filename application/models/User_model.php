@@ -15,7 +15,7 @@ class User_model extends CI_Model
      * 
      * @param int|null $limit
      * @param int|null $offset
-     * @return array[}
+     * @return array[]
      */
     public function get_all(?int $limit = null, ?int $offset = null): array
     {
