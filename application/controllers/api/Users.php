@@ -74,4 +74,48 @@ class Users extends CI_Controller
             $this->api_response->error('Erro interno do servidor', 500);
         }
     }
+
+    /**
+     * Criar usuário (POST /api/users)
+     */
+    public function create()
+    {
+        try {
+            $input_data = $this->get_json_input();
+            if ($input_data === false) return;
+
+            $data = $this->api_validator->sanitize_input($input_data);
+
+            $validation = $this->api_validator->validate_create_user($data);
+            if ($validation !== true) $this->api_response->error('Dados inválidos', 422, $validation);
+
+            if ($this->User_model->email_exists($data['email'])) $this->api_response->error('Email já está em uso', 409);
+
+            $user_id = $this->User_model->create($data);
+
+            if (!$user_id) $this->api_response->error('Erro ao criar usuário', 500);
+
+            $user = $this->User_model->get_by_id($user_id);
+
+            $this->api_response->success($user, 'Usuário criado com sucesso', 201);
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao criar usuário: ' . $e->getMessage());
+            $this->api_response->error('Erro interno do servidor', 500);
+        }
+    }
+
+    /**
+     * Obter dados JSON da requisição
+     */
+    private function get_json_input()
+    {
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->api_response->error('JSON inválido', 400);
+        }
+
+        return $data ?: [];
+    }
 }

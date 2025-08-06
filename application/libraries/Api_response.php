@@ -40,6 +40,8 @@ class Api_response
         if ($errors) $response['errors'] = $errors;
 
         $this->respond($response, $status_code);
+
+        return;
     }
 
     /**
