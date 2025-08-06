@@ -87,11 +87,11 @@ class Users extends CI_Controller
     {
         try {
             $input_data = $this->get_json_input();
-            if ($input_data === false) return;
 
             $data = $this->api_validator->sanitize_input($input_data);
 
             $validation = $this->api_validator->validate_create_user($data);
+
             if ($validation !== true)
                 $this->api_response->error('Dados inválidos', 422, $validation);
 
@@ -129,11 +129,11 @@ class Users extends CI_Controller
                 $this->api_response->error('Usuário não encontrado', 404);
 
             $input_data = $this->get_json_input();
-            if ($input_data === false) return;
 
             $data = $this->api_validator->sanitize_input($input_data);
 
             $validation = $this->api_validator->validate_update_user($data);
+
             if ($validation !== true)
                 $this->api_response->error('Dados inválidos', 422, $validation);
 
