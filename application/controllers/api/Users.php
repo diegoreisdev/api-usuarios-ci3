@@ -15,7 +15,7 @@ class Users extends CI_Controller
      */
     private function set_cors_headers()
     {
-        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Origin: http://localhost:8000/');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
         header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
         header('Access-Control-Max-Age: 86400');
@@ -23,8 +23,11 @@ class Users extends CI_Controller
 
     /**
      * Listar todos os usuários (GET /api/users)
+     * 
+     * @return void
+     * @throws Exception
      */
-    public function index()
+    public function index(): void
     {
         try {
             $page     = (int)$this->input->get('page') ?: 1;
@@ -60,8 +63,7 @@ class Users extends CI_Controller
     public function show(int $id): void
     {
         try {
-            if (!is_numeric($id) || $id <= 0)
-                $this->api_response->error('ID inválido', 400);
+            $this->validate_id_or_error($id);
 
             $user = $this->User_model->get_by_id($id);
 
@@ -120,8 +122,7 @@ class Users extends CI_Controller
     public function update(int $id): void
     {
         try {
-            if (!is_numeric($id) || $id <= 0)
-                $this->api_response->error('ID inválido', 400);
+            $this->validate_id_or_error($id);
 
             $existing_user = $this->User_model->get_by_id($id);
             if (!$existing_user)
@@ -152,6 +153,32 @@ class Users extends CI_Controller
     }
 
     /**
+     * Deletar usuário (DELETE /api/users/{id})
+     * 
+     * @param int $id 
+     * @return void
+     * @throws Exception
+     */
+    public function delete(int $id): void
+    {
+        try {
+            $this->validate_id_or_error($id);
+
+            $user = $this->User_model->get_by_id($id);
+            if (!$user)
+                $this->api_response->error('Usuário não encontrado', 404);
+
+            if (!$this->User_model->delete($id))
+                $this->api_response->error('Erro ao deletar usuário', 500);
+
+            $this->api_response->success(null, 'Usuário deletado com sucesso');
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao deletar usuário: ' . $e->getMessage());
+            $this->api_response->error('Erro interno do servidor', 500);
+        }
+    }
+
+    /**
      * Obter dados JSON da requisição
      */
     private function get_json_input()
@@ -170,5 +197,17 @@ class Users extends CI_Controller
             $this->api_response->error('Formato de JSON inválido', 400);
 
         return $data;
+    }
+
+    /**
+     * Valida o ID
+     * 
+     * @param int $id
+     * @return void
+     */
+    private function validate_id_or_error(int $id): void
+    {
+        if (!is_numeric($id) || $id <= 0)
+            $this->api_response->error('ID inválido', 400);
     }
 }
