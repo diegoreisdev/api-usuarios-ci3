@@ -52,21 +52,21 @@ class Users extends CI_Controller
 
     /**
      * Obter usuário específico (GET /api/users/{id})
+     * 
+     * @param int $id
+     * @return void
+     * @throws Exception
      */
-    public function show($id)
+    public function show(int $id): void
     {
         try {
-            if (!is_numeric($id) || $id <= 0) {
+            if (!is_numeric($id) || $id <= 0)
                 $this->api_response->error('ID inválido', 400);
-                return;
-            }
 
             $user = $this->User_model->get_by_id($id);
 
-            if (!$user) {
+            if (!$user)
                 $this->api_response->error('Usuário não encontrado', 404);
-                return;
-            }
 
             $this->api_response->success($user, 'Usuário encontrado com sucesso');
         } catch (Exception $e) {
@@ -77,8 +77,11 @@ class Users extends CI_Controller
 
     /**
      * Criar usuário (POST /api/users)
+     * 
+     * @return void
+     * @throws Exception
      */
-    public function create()
+    public function create(): void
     {
         try {
             $input_data = $this->get_json_input();
@@ -87,13 +90,16 @@ class Users extends CI_Controller
             $data = $this->api_validator->sanitize_input($input_data);
 
             $validation = $this->api_validator->validate_create_user($data);
-            if ($validation !== true) $this->api_response->error('Dados inválidos', 422, $validation);
+            if ($validation !== true)
+                $this->api_response->error('Dados inválidos', 422, $validation);
 
-            if ($this->User_model->email_exists($data['email'])) $this->api_response->error('Email já está em uso', 409);
+            if ($this->User_model->email_exists($data['email']))
+                $this->api_response->error('Email já está em uso', 409);
 
             $user_id = $this->User_model->create($data);
 
-            if (!$user_id) $this->api_response->error('Erro ao criar usuário', 500);
+            if (!$user_id)
+                $this->api_response->error('Erro ao criar usuário', 500);
 
             $user = $this->User_model->get_by_id($user_id);
 
@@ -105,17 +111,64 @@ class Users extends CI_Controller
     }
 
     /**
+     * Atualizar usuário (PUT /api/users/{id})
+     * 
+     * @param int $id
+     * @return void
+     * @throws Exception
+     */
+    public function update(int $id): void
+    {
+        try {
+            if (!is_numeric($id) || $id <= 0)
+                $this->api_response->error('ID inválido', 400);
+
+            $existing_user = $this->User_model->get_by_id($id);
+            if (!$existing_user)
+                $this->api_response->error('Usuário não encontrado', 404);
+
+            $input_data = $this->get_json_input();
+            if ($input_data === false) return;
+
+            $data = $this->api_validator->sanitize_input($input_data);
+
+            $validation = $this->api_validator->validate_update_user($data);
+            if ($validation !== true)
+                $this->api_response->error('Dados inválidos', 422, $validation);
+
+            if (isset($data['email']) && $this->User_model->email_exists($data['email'], $id))
+                $this->api_response->error('Email já cadastrado', 409);
+
+            if (!$this->User_model->update($id, $data))
+                $this->api_response->error('Erro ao atualizar usuário', 500);
+
+            $user = $this->User_model->get_by_id($id);
+
+            $this->api_response->success($user, 'Usuário atualizado com sucesso');
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao atualizar usuário: ' . $e->getMessage());
+            $this->api_response->error('Erro interno do servidor', 500);
+        }
+    }
+
+    /**
      * Obter dados JSON da requisição
      */
     private function get_json_input()
     {
         $input = file_get_contents('php://input');
+
+        if (empty($input))
+            $this->api_response->error('Corpo da requisição vazio', 400);
+
         $data = json_decode($input, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->api_response->error('JSON inválido', 400);
-        }
+        if (json_last_error() !== JSON_ERROR_NONE)
+            $this->api_response->error('JSON inválido: ' . json_last_error_msg(), 400);
 
-        return $data ?: [];
+        if (!is_array($data))
+            $this->api_response->error('Formato de JSON inválido', 400);
+
+        return $data;
     }
 }
